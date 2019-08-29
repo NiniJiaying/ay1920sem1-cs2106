@@ -46,6 +46,8 @@ int main()
 	int instruction;
 	int subPosition;
 	int value;
+
+	void (*fptr[])() = {insertNodePrevious, deleteNode, insertNodeNext, insertSubNode, collapseSubNodes};
 	
 	// Declaration of the origin Node
 	node* originNode = (node*)malloc(sizeof(node));
@@ -62,26 +64,26 @@ int main()
 		// TODO: You would have to implement input and processing yourself. 
 		if (instruction == DELETE)
 		{
-			(*deleteNode)(position, originNode);
+			(*fptr[instruction+1])(position, originNode);
 		}
 		else if (instruction == INSERTSUBNODE)
 		{
 			scanf("%i%i", &subPosition, &value);
-			(*insertSubNode)(position, subPosition, value, originNode);
+			(*fptr[instruction+1])(position, subPosition, value, originNode);
 		}
 		else if (instruction == NEXT)
 		{
 			scanf("%i", &value);
-			(*insertNodeNext)(position, value, originNode);
+			(*fptr[instruction+1])(position, value, originNode);
 		}
 		else if (instruction == PREVIOUS)
 		{
 			scanf("%i", &value);
-			(*insertNodePrevious)(position, value, originNode);
+			(*fptr[instruction+1])(position, value, originNode);
 		}
 		else if (instruction == COLLAPSE)
 		{
-			(*collapseSubNodes)(position, originNode);
+			(*fptr[instruction+1])(position, originNode);
 		}
 	}
 	printList(originNode);
