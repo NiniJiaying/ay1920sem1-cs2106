@@ -187,7 +187,7 @@ void deleteNode(int position, node *originNode)
 		originNode = originNode->nextNode;
 	originNode->previousNode->nextNode = originNode->nextNode;
 	originNode->nextNode->previousNode = originNode->previousNode;
-	deleteAllSubNodes(originNode);
+	(*deleteAllSubNodes)(originNode);
 	free(originNode);
 	return;
 }
@@ -209,14 +209,14 @@ void deleteList(node *originNode)
 {
 	// TODO
 	// Note: you can use a similar implementation as in ex1.
-	deleteAllSubNodes(originNode);
+	(*deleteAllSubNodes)(originNode);
 	node *nodePtr = originNode->nextNode;
 	originNode->nextNode = originNode;
 	originNode->previousNode = originNode;
 	while (nodePtr != originNode)
 	{
 		node *nextPtr = nodePtr->nextNode;
-		deleteAllSubNodes(nodePtr);
+		(*deleteAllSubNodes)(nodePtr);
 		free(nodePtr);
 		nodePtr = nextPtr;
 	}
