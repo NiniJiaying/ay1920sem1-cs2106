@@ -22,7 +22,59 @@ void freeTokenArray(char** strArr, int size);
 
 int main() {
     //TODO add your code
-    
+    char *buf;
+    size_t bufsize = 256;
+    buf = (char *) malloc (bufsize * sizeof(char));
+    char** tokens;
+    while(1) {
+        printf("GENIE > ");
+        getline(&buf, &bufsize, stdin);
+        int num;
+        tokens = readTokens(20, 19, &num, buf);
+        if(num == 0) {
+            // No command is given
+            continue;
+        } else if(num == 1 && strcmp(tokens[0], "quit") == 0) {
+            // quit command is given
+            printf("Goodbye!\n");
+            freeTokenArray(tokens, num);
+            exit(0);
+        } else {
+            int pid = fork();
+            if(pid == 0) {
+                size_t pathSize = 25;
+                char* path = malloc(pathSize * sizeof(char));
+                char binPath[] = "/bin/";
+                strcpy(path, binPath);
+                if(!(tokens[0][0] == '/')) {
+                    strcat(path, tokens[0]);
+                } else {
+                    path = tokens[0];
+                }
+                if(num == 1) {
+                    // printf("num==1\n");
+                    // printf("path=%s\n", path);
+                    // printf("tokens[0]=%s\n", tokens[0]);
+                    int res = execl(path, tokens[0], NULL);
+                    if(res == -1) {
+                        printf("%s not found\n", path);
+                        exit(-1);
+                    }
+                } else {
+                    int res = execv(path, &tokens[0]);
+                    if(res == -1) {
+                        printf("%s not found\n", path);
+                        exit(-1);
+                    }
+                }
+            } else {
+                wait(NULL);
+            }
+        }
+        freeTokenArray(tokens, num);
+        printf("\n");
+    }
+    return 0;
 }
 
 
