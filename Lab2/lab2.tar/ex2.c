@@ -8,6 +8,11 @@
  lab machine (Linux on x86)
  *************************************/
 
+#define BUF_SIZE 256
+#define MAX_NUM_OF_ARGUMENTS 10
+#define MAX_LENGTH_OF_COMMANDS 19
+#define MAX_LENGTH_OF_ARGUMENTS 19
+
 #include <stdio.h>
 #include <fcntl.h>      //For stat()
 #include <sys/types.h>
@@ -19,18 +24,20 @@
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer);
 void freeTokenArray(char** strArr, int size);
+char* getCompletePath(char** tokens);
+void executeCommand(char** tokens);
 
 int main() {
     //TODO add your code
     char *buf;
-    size_t bufsize = 256;
+    size_t bufsize = BUF_SIZE;
     buf = (char *) malloc (bufsize * sizeof(char));
     char** tokens;
     while(1) {
         printf("GENIE > ");
         getline(&buf, &bufsize, stdin);
         int num;
-        tokens = readTokens(20, 19, &num, buf);
+        tokens = readTokens(20, MAX_LENGTH_OF_COMMANDS + 1, &num, buf);
         if(num == 0) {
             // No command is given
             continue;
@@ -42,22 +49,7 @@ int main() {
         } else {
             int pid = fork();
             if(pid == 0) {
-                size_t pathSize = 25;
-                char* path = malloc(pathSize * sizeof(char));
-                char binPath[] = "/bin/";
-                strcpy(path, binPath);
-                if(!(tokens[0][0] == '/')) {
-                    strcat(path, tokens[0]);
-                } else {
-                    path = tokens[0];
-                }
-                struct stat buffer;
-                if(stat(path, &buffer) != 0) {
-                    printf("%s not found\n", path);
-                    exit(-1);
-                } else {
-                    execv(path, &tokens[0]);
-                }
+                executeCommand(tokens);
             } else {
                 wait(NULL);
             }
@@ -65,13 +57,34 @@ int main() {
         freeTokenArray(tokens, num);
         printf("\n");
     }
+    free(buf);
     return 0;
 }
 
 
+char* getCompletePath(char** tokens) {
+    size_t pathSize = 25;
+    char* path = malloc(pathSize * sizeof(char));
+    char binPath[] = "/bin/";
+    strcpy(path, binPath);
+    if(!(tokens[0][0] == '/')) {
+        strcat(path, tokens[0]);
+    } else {
+        path = tokens[0];
+    }
+    return path;
+}
 
-
-
+void executeCommand(char** tokens) {
+    char* path = getCompletePath(tokens);
+    struct stat buffer;
+    if(stat(path, &buffer) != 0) {
+        printf("%s not found\n", path);
+        exit(-1);
+    } else {
+        execv(path, &tokens[0]);
+    }
+}
 
 char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* buffer)
 //Tokenize buffer
