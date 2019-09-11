@@ -1,5 +1,5 @@
 /*************************************
- * Lab 2 Exercise 2
+ * Lab 2 Exercise 3
  * Name: Tan Yuanhong
  * Student No: A0177903X
  * Lab Group: 07
@@ -7,6 +7,9 @@
  Warning: Make sure your code works on
  lab machine (Linux on x86)
  *************************************/
+
+#define READ_END 0
+#define WRITE_END 1
 
 #define BUF_SIZE 3000
 #define MAX_NUM_OF_ARGUMENTS 10
@@ -45,6 +48,7 @@ int main() {
     int totalJobs;
     int* tokenCountByJob;
     char*** tokensDividedByPipe = divideTokensByPipe(tokens, numOfTokens, &totalJobs, &tokenCountByJob);
+    /* Test print
     printf("total: %d\n", totalJobs);
     for(int i=0;i<totalJobs;i++) {
         printf("tokens: %d\n", tokenCountByJob[i]);
@@ -53,6 +57,7 @@ int main() {
         }
         printf("\n");
     }
+    */
     /*
     while(1) {
         printf("GENIE > ");
@@ -89,20 +94,14 @@ char*** divideTokensByPipe(char** tokens, int numOfTokens, int* totalJobs, int**
     int last = 0;
     int jobCount = 0;
     for(int i=0;i<numOfTokens;i++) {
-        // printf("len=%lu, content=%c\n", strlen(tokens[i]), tokens[i][0]);
         if(strlen(tokens[i])==1 && tokens[i][0] == '|') {
-            // from last to i is a complete command
             char** temp = (char**) malloc (sizeof(char*) * (i-last+1));
             for(int j=0;j<i-last;j++) {
                 temp[j] = (char*) malloc (sizeof(char) * strlen(tokens[i+j]));
                 strcpy(temp[j], tokens[last+j]);
             }
             tokensDividedByPipe[jobCount] = temp;
-            // for(int j=0;j<i-last;j++) {
-                // printf("%s ", tokensDividedByPipe[jobCount][j]);
-            // }
             tokensCount[jobCount++] = i-last;
-            // printf("\n------job %d has %d tokens-----\n", jobCount-1, tokensCount[jobCount-1]);
             last = i+1;
         }
     }
@@ -111,11 +110,7 @@ char*** divideTokensByPipe(char** tokens, int numOfTokens, int* totalJobs, int**
         tokensDividedByPipe[jobCount][i] = (char*) malloc (sizeof(char) * strlen(tokens[last+i]));
         strcpy(tokensDividedByPipe[jobCount][i], tokens[last+i]);
     }
-    // for(int j=0;j<numOfTokens-last;j++) {
-    //     printf("%s ", tokensDividedByPipe[jobCount][j]);
-    // }
     tokensCount[jobCount++] = numOfTokens-last;
-    // printf("\n------job %d has %d tokens-----\n", jobCount-1, tokensCount[jobCount-1]);
     if(totalJobs != NULL) *totalJobs = jobCount;
     if(tokenCountByJob != NULL) *tokenCountByJob = tokensCount;
     return tokensDividedByPipe;
