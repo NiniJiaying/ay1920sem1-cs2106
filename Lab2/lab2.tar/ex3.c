@@ -13,6 +13,7 @@
 #define MAX_LENGTH_OF_COMMANDS 19
 #define MAX_LENGTH_OF_ARGUMENTS 19
 #define MAX_NUM_OF_TOKENS 256
+#define MAX_NUM_OF_JOBS 10
 
 #include <stdio.h>
 #include <fcntl.h>      //For stat()
@@ -29,6 +30,7 @@ char** readTokens(int maxTokenNum, int maxTokenSize, int* readTokenNum, char* bu
 void freeTokenArray(char** strArr, int size);
 char* getCompletePath(char** tokens);
 void executeCommand(char** tokens);
+char*** divideTokensByPipe(char** tokens, int numOfTokens, int* totalJobs, int** tokenCountByJob);
 
 int main() {
     //TODO add your code
@@ -38,38 +40,32 @@ int main() {
     char** tokens;
 
     getline(&buf, &bufsize, stdin);
-    int num;
-    tokens = readTokens(MAX_NUM_OF_TOKENS, MAX_LENGTH_OF_ARGUMENTS, &num, buf);
-    int last = 0;
-    for(int i=0;i<num;i++) {
-        // printf("len=%lu, content=%c\n", strlen(tokens[i]), tokens[i][0]);
-        if(strlen(tokens[i])==1 && tokens[i][0] == '|') {
-            // from last to i is a complete command
-            char** temp = (char**) malloc (sizeof(char*) * (i-last+1));
-            for(int j=0;j<i-last;j++) {
-                temp[j] = (char*) malloc (sizeof(char) * strlen(tokens[i+j]));
-                strcpy(temp[j], tokens[last+j]);
-            }
-            for(int j=0;j<i-last;j++) {
-                printf("%s ", temp[j]);
-            }
-            printf("\n------\n");
-            last = i+1;
+    int numOfTokens;
+    tokens = readTokens(MAX_NUM_OF_TOKENS, MAX_LENGTH_OF_ARGUMENTS, &numOfTokens, buf);
+    int totalJobs;
+    int* tokenCountByJob;
+    char*** tokensDividedByPipe = divideTokensByPipe(tokens, numOfTokens, &totalJobs, &tokenCountByJob);
+    printf("total: %d\n", totalJobs);
+    for(int i=0;i<totalJobs;i++) {
+        printf("tokens: %d\n", tokenCountByJob[i]);
+        for(int j=0;j<tokenCountByJob[i]; j++) {
+            printf("%s ", tokensDividedByPipe[i][j]);
         }
+        printf("\n");
     }
     /*
     while(1) {
         printf("GENIE > ");
         getline(&buf, &bufsize, stdin);
-        int num;
-        tokens = readTokens(20, MAX_LENGTH_OF_COMMANDS + 1, &num, buf);
-        if(num == 0) {
+        int numOfTokens;
+        tokens = readTokens(20, MAX_LENGTH_OF_COMMANDS + 1, &numOfTokens, buf);
+        if(numOfTokens == 0) {
             // No command is given
             continue;
-        } else if(num == 1 && strcmp(tokens[0], "quit") == 0) {
+        } else if(numOfTokens == 1 && strcmp(tokens[0], "quit") == 0) {
             // quit command is given
             printf("Goodbye!\n");
-            freeTokenArray(tokens, num);
+            freeTokenArray(tokens, numOfTokens);
             exit(0);
         } else {
             int pid = fork();
@@ -79,7 +75,7 @@ int main() {
                 wait(NULL);
             }
         }
-        freeTokenArray(tokens, num);
+        freeTokenArray(tokens, numOfTokens);
         printf("\n");
     }
     */
@@ -87,6 +83,43 @@ int main() {
     return 0;
 }
 
+char*** divideTokensByPipe(char** tokens, int numOfTokens, int* totalJobs, int** tokenCountByJob) {
+    int* tokensCount = (int*) malloc ((sizeof(int*) * MAX_NUM_OF_JOBS));
+    char*** tokensDividedByPipe = (char***) malloc (sizeof(char**) * MAX_NUM_OF_JOBS);
+    int last = 0;
+    int jobCount = 0;
+    for(int i=0;i<numOfTokens;i++) {
+        // printf("len=%lu, content=%c\n", strlen(tokens[i]), tokens[i][0]);
+        if(strlen(tokens[i])==1 && tokens[i][0] == '|') {
+            // from last to i is a complete command
+            char** temp = (char**) malloc (sizeof(char*) * (i-last+1));
+            for(int j=0;j<i-last;j++) {
+                temp[j] = (char*) malloc (sizeof(char) * strlen(tokens[i+j]));
+                strcpy(temp[j], tokens[last+j]);
+            }
+            tokensDividedByPipe[jobCount] = temp;
+            // for(int j=0;j<i-last;j++) {
+                // printf("%s ", tokensDividedByPipe[jobCount][j]);
+            // }
+            tokensCount[jobCount++] = i-last;
+            // printf("\n------job %d has %d tokens-----\n", jobCount-1, tokensCount[jobCount-1]);
+            last = i+1;
+        }
+    }
+    tokensDividedByPipe[jobCount] = (char**) malloc (sizeof(char*) * (numOfTokens-last));
+    for(int i=0;i<numOfTokens-last;i++) {
+        tokensDividedByPipe[jobCount][i] = (char*) malloc (sizeof(char) * strlen(tokens[last+i]));
+        strcpy(tokensDividedByPipe[jobCount][i], tokens[last+i]);
+    }
+    // for(int j=0;j<numOfTokens-last;j++) {
+    //     printf("%s ", tokensDividedByPipe[jobCount][j]);
+    // }
+    tokensCount[jobCount++] = numOfTokens-last;
+    // printf("\n------job %d has %d tokens-----\n", jobCount-1, tokensCount[jobCount-1]);
+    if(totalJobs != NULL) *totalJobs = jobCount;
+    if(tokenCountByJob != NULL) *tokenCountByJob = tokensCount;
+    return tokensDividedByPipe;
+}
 
 char* getCompletePath(char** tokens) {
     size_t pathSize = 25;
