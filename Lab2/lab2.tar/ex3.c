@@ -83,57 +83,55 @@ int main()
             {
                 for (int i = 0; i < totalJobs-1; i++)
                 {
-                    int pipeFd[2], len;
-                    if (pipe(pipeFd) == -1)
-                    {
-                        printf("failed to create pipes\n");
-                    }
-                    pid_t child = fork();
-                    if (child == (pid_t)(-1))
-                    {
-                        printf("fork failed\n");
-                    }
-                    if (child == (pid_t)(0))
-                    {
-                        // child
-                        close(1); // close stdout
-                        if (dup(pipeFd[WRITE_END]) == -1)
-                        {
-                            printf("dup failed\n");
-                        }
-                        executeCommand(tokensDividedByPipe[i]);
-                    }
-                    else
-                    {
-                        // parent
-                        pid_t pid = fork();
-                        if(pid == (pid_t)(-1)) {
-                            printf("fork failed\n");
-                        }
-                        if(pid == (pid_t)(0)) {
-                            // left side of pipe
-                            close(0); /* close stdin */
-                            if (dup(pipeFd[READ_END]) == -1)
+                    int pipeFd[2];
+                    int child1, child2;
+                    pipe(pipeFd);
+                    if((child1 = fork()) == 0) {
+                        // first child
+                        if((child2 = fork()) == 0) {
+                            // child of child
+                            close(1); // close stdout
+                            dup(pipeFd[WRITE_END]);
+
+                            char *completePath = getCompletePath(tokensDividedByPipe[i]);
+                            struct stat buffer;
+                            if (stat(completePath, &buffer) != 0)
                             {
-                                printf("dup failed\n");
+                                printf("%s not found\n", completePath);
+                                exit(-1);
                             }
-                            executeCommand(tokensDividedByPipe[i+1]);
+                            else
+                            {
+                                execv(completePath, tokensDividedByPipe[i]);
+                            }
+
+                            close(pipeFd[WRITE_END]);
+                            exit(0);
                         } else {
+                            // main of child
+                            close(0); // close stdin
+                            dup(pipeFd[READ_END]);
+                            
+                            char *completePath = getCompletePath(tokensDividedByPipe[i+1]);
+                            struct stat buffer;
+                            if (stat(completePath, &buffer) != 0)
+                            {
+                                printf("%s not found\n", completePath);
+                                exit(-1);
+                            }
+                            else
+                            {
+                                execv(completePath, tokensDividedByPipe[i+1]);
+                            }
+
+                            close(pipeFd[READ_END]);
                             wait(NULL);
+                            exit(0);
                         }
-                    }
-                    /*
-                    if( (pid = fork()) > 0) {
-                        // parent
-                        close(pipeFd[READ_END]);
-                        // write(pipeFd[WRITE_END], stuff, cnt);
-                        close(pipeFd[WRITE_END]);
                     } else {
-                        // child
-                        close(pipeFd[WRITE_END]);
-                        // len = read(pipeFd[READ_END], buf, sizeofbuf);
-                        close(pipeFd[READ_END]);
-                    }*/
+                        // outermost main
+                        wait(NULL);
+                    }
                 }
             }
         }
