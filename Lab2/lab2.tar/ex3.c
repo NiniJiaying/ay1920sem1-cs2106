@@ -81,52 +81,53 @@ int main()
             }
             else
             {
-                for (int i = 0; i < totalJobs-1; i++)
-                {
-                    int pipeFd[2];
-                    int child1, child2;
-                    pipe(pipeFd);
-                    if((child1 = fork()) == 0) {
-                        // first child
-                        if((child2 = fork()) == 0) {
-                            // child of child
-                            dup2(pipeFd[WRITE_END], 1);
-                            close(pipeFd[READ_END]);
-                            char *completePath = getCompletePath(tokensDividedByPipe[i]);
-                            struct stat buffer;
-                            if (stat(completePath, &buffer) != 0)
-                            {
-                                printf("%s not found\n", completePath);
-                                exit(-1);
-                            }
-                            else
-                            {
-                                execv(completePath, tokensDividedByPipe[i]);
-                            }
-                            // exit(0);
-                        } else {
-                            // main of child
-                            dup2(pipeFd[READ_END], 0);
-                            close(pipeFd[WRITE_END]);
-                            char *completePath = getCompletePath(tokensDividedByPipe[i+1]);
-                            struct stat buffer;
-                            if (stat(completePath, &buffer) != 0)
-                            {
-                                printf("%s not found\n", completePath);
-                                exit(-1);
-                            }
-                            else
-                            {
-                                execv(completePath, tokensDividedByPipe[i+1]);
-                            }
-                            // wait(NULL);
-                            // exit(0);
-                        }
-                    } else {
-                        // outermost main
-                        wait(NULL);
-                        wait(NULL);
+                // before executing, check if any of the commands don't exist
+                int allCommandExists = 1;
+                for(int i=0;i<totalJobs;i++) {
+                    char* cp = getCompletePath(tokensDividedByPipe[i]);
+                    struct stat buffer;
+                    if (stat(cp, &buffer) != 0)
+                    {
+                        printf("%s not found\n", cp);
+                        allCommandExists = 0;
                     }
+                }
+                if(allCommandExists != 1) continue;
+                // for n jobs, we need n-1 pipes, 2*n-2 fds
+                int pipeFd[2 * totalJobs - 2];
+                for (int i = 0; i < totalJobs; i++)
+                {
+                    pipe(pipeFd + i * 2);
+                }
+                for (int i = 0; i < totalJobs; i++)
+                {
+                    if (fork() == 0)
+                    {
+                        if (i == 0)
+                        {
+                            // only connects stdout
+                            dup2(pipeFd[WRITE_END], 1);
+                        }
+                        else if (i == totalJobs - 1)
+                        {
+                            // only connects stdin
+                            dup2(pipeFd[2 * totalJobs - 4], 0);
+                        }
+                        else
+                        {
+                            dup2(pipeFd[2 * i + WRITE_END], 1);
+                            dup2(pipeFd[2 * i + READ_END], 0);
+                        }
+                        for (int j = 0; j < 2 * totalJobs - 3; j++)
+                        {
+                            close(pipeFd[j]);
+                        } // close all pipes
+                        executeCommand(tokensDividedByPipe[i]);
+                    }
+                }
+                for (int i = 0; i < totalJobs - 1; i++)
+                {
+                    wait(NULL);
                 }
             }
         }
@@ -194,16 +195,7 @@ char *getCompletePath(char **tokens)
 void executeCommand(char **tokens)
 {
     char *path = getCompletePath(tokens);
-    struct stat buffer;
-    if (stat(path, &buffer) != 0)
-    {
-        printf("%s not found\n", path);
-        exit(-1);
-    }
-    else
-    {
-        execv(path, &tokens[0]);
-    }
+    execv(path, &tokens[0]);
 }
 
 char **readTokens(int maxTokenNum, int maxTokenSize, int *readTokenNum, char *buffer)
