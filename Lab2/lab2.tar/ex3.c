@@ -1,5 +1,5 @@
 /*************************************
- * Lab 2 Exercise 2
+ * Lab 2 Exercise 3
  * Name: Tan Yuanhong
  * Student No: A0177903X
  * Lab Group: 07
@@ -7,6 +7,9 @@
  Warning: Make sure your code works on
  lab machine (Linux on x86)
  *************************************/
+
+#define READ_END 0
+#define WRITE_END 1
 
 #include <stdio.h>
 #include <fcntl.h>      //For stat()
@@ -31,6 +34,10 @@ int main() {
         getline(&buf, &bufsize, stdin);
         int num;
         tokens = readTokens(20, 19, &num, buf);
+        for(int i=0;i<num;i++) {
+            printf("%s\n", tokens[i]);
+        }
+        return 0;
         if(num == 0) {
             // No command is given
             continue;
