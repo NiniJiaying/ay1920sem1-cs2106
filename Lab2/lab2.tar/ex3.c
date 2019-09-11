@@ -90,9 +90,8 @@ int main()
                         // first child
                         if((child2 = fork()) == 0) {
                             // child of child
-                            close(1); // close stdout
-                            dup(pipeFd[WRITE_END]);
-
+                            dup2(pipeFd[WRITE_END], 1);
+                            close(pipeFd[READ_END]);
                             char *completePath = getCompletePath(tokensDividedByPipe[i]);
                             struct stat buffer;
                             if (stat(completePath, &buffer) != 0)
@@ -104,14 +103,11 @@ int main()
                             {
                                 execv(completePath, tokensDividedByPipe[i]);
                             }
-
-                            close(pipeFd[WRITE_END]);
-                            exit(0);
+                            // exit(0);
                         } else {
                             // main of child
-                            close(0); // close stdin
-                            dup(pipeFd[READ_END]);
-                            
+                            dup2(pipeFd[READ_END], 0);
+                            close(pipeFd[WRITE_END]);
                             char *completePath = getCompletePath(tokensDividedByPipe[i+1]);
                             struct stat buffer;
                             if (stat(completePath, &buffer) != 0)
@@ -123,13 +119,12 @@ int main()
                             {
                                 execv(completePath, tokensDividedByPipe[i+1]);
                             }
-
-                            close(pipeFd[READ_END]);
-                            wait(NULL);
-                            exit(0);
+                            // wait(NULL);
+                            // exit(0);
                         }
                     } else {
                         // outermost main
+                        wait(NULL);
                         wait(NULL);
                     }
                 }
