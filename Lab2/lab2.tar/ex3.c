@@ -83,8 +83,9 @@ int main()
             {
                 // before executing, check if any of the commands don't exist
                 int allCommandExists = 1;
-                for(int i=0;i<totalJobs;i++) {
-                    char* cp = getCompletePath(tokensDividedByPipe[i]);
+                for (int i = 0; i < totalJobs; i++)
+                {
+                    char *cp = getCompletePath(tokensDividedByPipe[i]);
                     struct stat buffer;
                     if (stat(cp, &buffer) != 0)
                     {
@@ -92,43 +93,59 @@ int main()
                         allCommandExists = 0;
                     }
                 }
-                if(allCommandExists != 1) continue;
+                if (allCommandExists != 1)
+                    continue;
                 // for n jobs, we need n-1 pipes, 2*n-2 fds
                 int pipeFd[2 * totalJobs - 2];
                 for (int i = 0; i < totalJobs; i++)
                 {
                     pipe(pipeFd + i * 2);
                 }
+                // printf("total jobs: %d\n", totalJobs);
+                // printf("parent pid: %d\n", getpid());
                 for (int i = 0; i < totalJobs; i++)
                 {
-                    if (fork() == 0)
+                    int pid = fork();
+                    if (pid == -1)
                     {
+                        fprintf(stderr, "err");
+                    }
+                    if (pid == 0)
+                    {
+                        // fprintf(stderr, "child ppid: %d\n", getppid());
                         if (i == 0)
                         {
                             // only connects stdout
-                            dup2(pipeFd[WRITE_END], 1);
+                            if (dup2(pipeFd[WRITE_END], 1) == -1)
+                                fprintf(stderr, "err");
+                            close(pipeFd[READ_END]);
                         }
                         else if (i == totalJobs - 1)
                         {
                             // only connects stdin
-                            dup2(pipeFd[2 * totalJobs - 4], 0);
+                            if (dup2(pipeFd[2 * totalJobs - 4], 0) == -1)
+                                fprintf(stderr, "err");
+                            close(pipeFd[2 * totalJobs - 3]);
                         }
                         else
                         {
-                            dup2(pipeFd[2 * i + WRITE_END], 1);
-                            dup2(pipeFd[2 * i + READ_END], 0);
+                            if (dup2(pipeFd[2 * i + WRITE_END], 1) == -1)
+                                fprintf(stderr, "err");
+                            close(pipeFd[2 * i + READ_END]);
+                            if (dup2(pipeFd[2 * (i - 1) + READ_END], 0) == -1)
+                                fprintf(stderr, "err");
+                            close(pipeFd[2 * (i - 1)]);
                         }
-                        for (int j = 0; j < 2 * totalJobs - 3; j++)
-                        {
-                            close(pipeFd[j]);
-                        } // close all pipes
+                        // fprintf(stderr, "child[%d] executes\n", getpid());
                         executeCommand(tokensDividedByPipe[i]);
                     }
                 }
-                for (int i = 0; i < totalJobs - 1; i++)
-                {
-                    wait(NULL);
-                }
+                wait(NULL);
+                // for (int i = 0; i < totalJobs; i++)
+                // {
+                //     int pid = wait(NULL);
+                //     printf("waited %d\n", pid);
+                // }
             }
         }
 
@@ -195,7 +212,9 @@ char *getCompletePath(char **tokens)
 void executeCommand(char **tokens)
 {
     char *path = getCompletePath(tokens);
+    // fprintf(stderr, "%s\n", path);
     execv(path, &tokens[0]);
+    exit(0);
 }
 
 char **readTokens(int maxTokenNum, int maxTokenSize, int *readTokenNum, char *buffer)
