@@ -83,6 +83,7 @@ void executeCommand(char** tokens) {
         exit(-1);
     } else {
         execv(path, &tokens[0]);
+        exit(0);
     }
 }
 

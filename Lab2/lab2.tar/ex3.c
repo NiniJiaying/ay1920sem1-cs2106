@@ -148,7 +148,6 @@ int main()
                 for (int i = 0; i < totalJobs; i++)
                 {
                     int pid = wait(NULL);
-                    // printf("waited %d\n", pid);
                 }
             }
         }
@@ -213,12 +212,22 @@ char *getCompletePath(char **tokens)
     return path;
 }
 
+int checkPathExists(char* path) {
+    struct stat buffer;
+    if(stat(path, &buffer) != 0) return 0;
+    return 1;
+}
+
 void executeCommand(char **tokens)
-{
-    char *path = getCompletePath(tokens);
-    // fprintf(stderr, "%s\n", path);
-    execv(path, &tokens[0]);
-    exit(0);
+{    char userBinPath[] = "/usr/bin";
+    char* path = getCompletePath(tokens);
+    if(!checkPathExists(path)) {
+        printf("%s not found\n", path);
+        exit(-1);
+    } else {
+        execv(path, &tokens[0]);
+        exit(0);
+    }
 }
 
 char **readTokens(int maxTokenNum, int maxTokenSize, int *readTokenNum, char *buffer)
