@@ -8,6 +8,8 @@
  lab machine (Linux on x86)
  *************************************/
 
+#define pr(line) fprintf(stderr, "err %d\n", line)
+
 #define READ_END 0
 #define WRITE_END 1
 
@@ -117,35 +119,37 @@ int main()
                         {
                             // only connects stdout
                             if (dup2(pipeFd[WRITE_END], 1) == -1)
-                                fprintf(stderr, "err");
-                            close(pipeFd[READ_END]);
+                                pr(122);
                         }
                         else if (i == totalJobs - 1)
                         {
                             // only connects stdin
                             if (dup2(pipeFd[2 * totalJobs - 4], 0) == -1)
-                                fprintf(stderr, "err");
-                            close(pipeFd[2 * totalJobs - 3]);
+                                pr(128);
                         }
                         else
                         {
                             if (dup2(pipeFd[2 * i + WRITE_END], 1) == -1)
-                                fprintf(stderr, "err");
-                            close(pipeFd[2 * i + READ_END]);
+                                pr(133);
                             if (dup2(pipeFd[2 * (i - 1) + READ_END], 0) == -1)
-                                fprintf(stderr, "err");
-                            close(pipeFd[2 * (i - 1)]);
+                                pr(135);
                         }
-                        // fprintf(stderr, "child[%d] executes\n", getpid());
+                        for (int j = 0; j < 2 * totalJobs - 2; j++)
+                        {
+                            close(pipeFd[j]);
+                        } // close all pipes
                         executeCommand(tokensDividedByPipe[i]);
                     }
                 }
-                wait(NULL);
-                // for (int i = 0; i < totalJobs; i++)
-                // {
-                //     int pid = wait(NULL);
-                //     printf("waited %d\n", pid);
-                // }
+                for (int j = 0; j < 2 * totalJobs - 2; j++)
+                {
+                    close(pipeFd[j]);
+                } // close all pipes
+                for (int i = 0; i < totalJobs; i++)
+                {
+                    int pid = wait(NULL);
+                    printf("waited %d\n", pid);
+                }
             }
         }
 
