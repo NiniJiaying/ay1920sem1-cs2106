@@ -99,7 +99,7 @@ int main()
                     continue;
                 // for n jobs, we need n-1 pipes, 2*n-2 fds
                 int pipeFd[2 * totalJobs - 2];
-                for (int i = 0; i < totalJobs; i++)
+                for (int i = 0; i < totalJobs-1; i++)
                 {
                     pipe(pipeFd + i * 2);
                 }
@@ -148,7 +148,7 @@ int main()
                 for (int i = 0; i < totalJobs; i++)
                 {
                     int pid = wait(NULL);
-                    printf("waited %d\n", pid);
+                    // printf("waited %d\n", pid);
                 }
             }
         }
