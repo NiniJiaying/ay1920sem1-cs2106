@@ -42,6 +42,7 @@ int executeCommand(char **command, char *keyword, int tokenNum);
 char **duplicateCommand(char **tokens, int leftIndex, int rightIndex);
 int keywordSwitcher(char *keyword);
 void removeQuotes(char *token, int len);
+void removeDollars(char *token);
 
 int main()
 {
@@ -49,12 +50,33 @@ int main()
     int i;
     while (1)
     {
-        int hasQuit = 0, hasInvalidCmd = 0;
+        int hasQuit = 0, hasInvalidCmd = 0, hasSetOrUnset = 0;
         int tokenNum = 0;
         char **tokens = readTokens(MAX_TOKEN_NUM, MAX_TOKEN_SIZE, &tokenNum, getCommand());
 
         if (tokenNum <= 0)
         {
+            freeTokenArray(tokens, tokenNum);
+            continue;
+        }
+
+        switch (keywordSwitcher(tokens[0]))
+        {
+        case COMMAND_SET:
+            executeCommand(tokens, tokens[0], tokenNum);
+            hasSetOrUnset = 1;
+            break;
+        case COMMAND_UNSET:
+            executeCommand(tokens, tokens[0], tokenNum);
+            hasSetOrUnset = 1;
+            break;
+        default:
+            break;
+        }
+
+        if (hasSetOrUnset)
+        {
+            printf("\n");
             freeTokenArray(tokens, tokenNum);
             continue;
         }
@@ -180,6 +202,23 @@ int executeCommand(char **command, char *keyword, int tokenNum)
         if (childPid == 0)
         {
             for (i = 0; i < tokenNum; i++)
+            {
+                int tokenLength = strlen(command[i]);
+                if (tokenLength > 0 && command[i][0] == '$')
+                {
+                    removeDollars(command[i]);
+                    char *value = getenv(command[i]);
+                    if (value == NULL)
+                    {
+                        strcpy(command[i], "");
+                    }
+                    else
+                    {
+                        strcpy(command[i], value);
+                    }
+                }
+            }
+            for (i = 0; i < tokenNum; i++)
                 removeQuotes(command[i], strlen(command[i]));
             command[tokenNum] = NULL;
             execv(keyword, command);
@@ -189,6 +228,13 @@ int executeCommand(char **command, char *keyword, int tokenNum)
         return COMMAND_VALID;
         break;
     }
+    case COMMAND_SET:
+        setenv(command[1], command[2], 1);
+        break;
+    case COMMAND_UNSET:
+        removeDollars(command[1]);
+        unsetenv(command[1]);
+        break;
     default:
         return COMMAND_INVALID;
         break;
@@ -202,6 +248,10 @@ int keywordSwitcher(char *keyword)
         return COMMAND_QUIT;
     else if (stat(keyword, &buf) == 0)
         return COMMAND_VALID;
+    else if (strcmp(keyword, "set") == 0)
+        return COMMAND_SET;
+    else if (strcmp(keyword, "unset") == 0)
+        return COMMAND_UNSET;
     else
     {
         char defaultPath[MAX_TOKEN_SIZE] = "/bin/";
@@ -221,6 +271,27 @@ void removeQuotes(char *token, int tokenLen)
             token[ptr++] = token[i];
     }
     token[ptr] = '\0';
+}
+
+void removeDollars(char *token)
+{
+    int ptr, i, len = strlen(token);
+    for (i = 0; i < len; i++)
+    {
+        if (token[i] != '$')
+        {
+            ptr = i;
+            break;
+        }
+    }
+    for (i = 0; i < len; i++)
+    {
+        if (token[ptr] == '\0')
+            break;
+        else
+            token[i] = token[ptr++];
+    }
+    token[i] = '\0';
 }
 
 char **readTokens(int maxTokenNum, int maxTokenSize, int *readTokenNum, char *buffer)
