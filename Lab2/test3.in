@@ -1,0 +1,2 @@
+ls | cat -n | /usr/bin/wc -w
+

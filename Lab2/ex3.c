@@ -103,6 +103,7 @@ int main()
         if (hasQuit)
         {
             printf("Goodbye!\n");
+            fflush(stdout);
             freeTokenArray(tokens, tokenNum);
             return 0;
         }
@@ -110,6 +111,7 @@ int main()
         if (hasInvalidCmd)
         {
             printf("%s not found\n", keyword);
+            fflush(stdout);
         }
         else
         {
@@ -122,17 +124,20 @@ int main()
             if (executeResult == COMMAND_INVALID)
             {
                 printf("%s not found\n", keyword);
+                fflush(stdout);
             }
             else if (executeResult == COMMAND_QUIT)
             {
                 printf("Goodbye!\n");
+                fflush(stdout);
                 freeTokenArray(tokens, tokenNum);
                 return 0;
             }
         }
         dup2(inFd, STDIN_FILENO);
         close(inFd);
-        printf("\n");
+        // printf("\n");
+        // fflush(stdin);
         freeTokenArray(tokens, tokenNum);
     }
     return 0;
@@ -142,7 +147,8 @@ char *getCommand()
 {
     char *command = NULL;
     size_t len = 0;
-    printf("GENIE > ");
+    printf("GENIE>");
+    fflush(stdout);
     getline(&command, &len, stdin);
     return command;
 }
