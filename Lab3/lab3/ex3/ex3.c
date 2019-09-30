@@ -21,9 +21,11 @@ extern int num_of_segments;
 
 // segment_struct** strs;
 pthread_mutex_t *mutex;
+sem_t sem;
 
 void initialise()
 {
+    sem_init(&sem, 0, num_of_segments-1);
     mutex = (pthread_mutex_t *)malloc((num_of_segments) * sizeof(pthread_mutex_t));
     for (int i = 0; i < num_of_segments; i++)
     {
@@ -48,21 +50,21 @@ void *car(void *car)
     //   -followed by some calls to move_to_next_segment (...)
     //   -finally call exit_roundabout (...)
     car_struct *self = (car_struct *)car;
-    int cur = self->entry_seg;
 
-    wait(cur);
+    sem_wait(&sem);
+    wait(self->entry_seg);
     enter_roundabout(self);
 
-    while(cur != self->exit_seg) {
-        cur = NEXT(cur, num_of_segments);
-        wait(cur);
+    while(self->current_seg != self->exit_seg) {
+        wait(NEXT(self->current_seg, num_of_segments));
         move_to_next_segment(self);
-        signal(PREV(cur, num_of_segments));
+        signal(PREV(self->current_seg, num_of_segments));
     }
 
     exit_roundabout(self);
-    signal(cur);
-    signal(PREV(cur, num_of_segments));
+    signal(self->exit_seg);
+    // signal(PREV(self->current_seg, num_of_segments));
+    sem_post(&sem);
 
     pthread_exit(NULL);
 }
