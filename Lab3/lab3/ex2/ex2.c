@@ -1,9 +1,9 @@
 
 /*************************************
  * Lab 3 Exercise 2
- * Name: 
- * Student No:
- * Lab Group:
+ * Name: Tan Yuanhong
+ * Student No: A0177903X
+ * Lab Group: 07
  *************************************/
 #include <pthread.h>
 #include "rw_lock.h"

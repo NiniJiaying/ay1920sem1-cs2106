@@ -1,8 +1,8 @@
 /*************************************
  * Lab 3 Exercise 1
- * Name: 
- * Student No:
- * Lab Group:
+ * Name: Tan Yuanhong
+ * Student No: A0177903X
+ * Lab Group: 07
  *************************************/
 
 
