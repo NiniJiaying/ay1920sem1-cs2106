@@ -10,8 +10,8 @@
 #include <semaphore.h>
 
 typedef struct {
-  sem_t mutex;
-  sem_t isEmpty;
+  pthread_mutex_t mutex;
+  pthread_mutex_t isEmpty;
   int reader_count;
   int writer_count;
 } rw_lock;
