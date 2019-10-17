@@ -10,42 +10,42 @@
 
 void initialise(rw_lock* lock)
 {
-  sem_init(&(lock->mutex), 0, 1);
-  sem_init(&(lock->isEmpty), 0, 1);
+  pthread_mutex_init(&(lock->mutex), NULL);
+  pthread_mutex_init(&(lock->isEmpty), NULL);
   lock->reader_count = 0;
   lock->writer_count = 0;
 }
 
 void writer_acquire(rw_lock* lock)
 {
-  sem_wait(&(lock->isEmpty));
+  pthread_mutex_lock(&(lock->isEmpty));
   lock->writer_count++;
 }
 
 void writer_release(rw_lock* lock)
 {
   lock->writer_count--;
-  sem_post(&(lock->isEmpty));
+  pthread_mutex_unlock(&(lock->isEmpty));
 }
 
 void reader_acquire(rw_lock* lock)
 {
-  sem_wait(&(lock->mutex));
-  if(lock->reader_count == 0) sem_wait(&(lock->isEmpty));
+  pthread_mutex_lock(&(lock->mutex));
+  if(lock->reader_count == 0) pthread_mutex_lock(&(lock->isEmpty));
   lock->reader_count++;
-  sem_post(&(lock->mutex));
+  pthread_mutex_unlock(&(lock->mutex));
 }
 
 void reader_release(rw_lock* lock)
 {
-  sem_wait(&(lock->mutex));
+  pthread_mutex_lock(&(lock->mutex));
   lock->reader_count--;
-  if(lock->reader_count == 0) sem_post(&(lock->isEmpty));
-  sem_post(&(lock->mutex));
+  if(lock->reader_count == 0) pthread_mutex_unlock(&(lock->isEmpty));
+  pthread_mutex_unlock(&(lock->mutex));
 }
 
 void cleanup(rw_lock* lock)
 {
-  sem_destroy(&(lock->mutex));
-  sem_destroy(&(lock->isEmpty));
+  pthread_mutex_destroy(&(lock->mutex));
+  pthread_mutex_destroy(&(lock->isEmpty));
 }

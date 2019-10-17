@@ -12,35 +12,35 @@
 #include "traffic_synchronizer.h"
 
 #include <stdio.h>
-#define wait(i) sem_wait(&mutex[i])
-#define signal(i) sem_post(&mutex[i])
+#define wait(i) pthread_mutex_lock(&mutex[i])
+#define signal(i) pthread_mutex_unlock(&mutex[i])
 
 //Using extern, you can use the global variables num_of_cars and num_of_segments from ex3_runner.c in your code.
 extern int num_of_cars;
 extern int num_of_segments;
 
 // segment_struct** strs;
-sem_t *mutex;
-sem_t sem;
+pthread_mutex_t *mutex;
+sem_t limit_sem; // limit the number of cars in the turnabout to prevent deadlocks
 
 void initialise()
 {
-    sem_init(&sem, 0, num_of_segments - 1);
-    mutex = (sem_t *)malloc((num_of_segments) * sizeof(sem_t));
+    sem_init(&limit_sem, 0, num_of_segments - 1);
+    mutex = (pthread_mutex_t *)malloc((num_of_segments) * sizeof(pthread_mutex_t));
     for (int i = 0; i < num_of_segments; i++)
     {
-        sem_init(&mutex[i], 0, 1);
+        pthread_mutex_init(&mutex[i], NULL);
     }
 }
 
 void cleanup()
 {
+    sem_destroy(&limit_sem);
     for (int i = 0; i < num_of_segments; i++)
     {
-        sem_destroy(&mutex[i]);
+        pthread_mutex_destroy(&mutex[i]);
     }
     free(mutex);
-    sem_destroy(&sem);
 }
 
 void *car(void *car)
@@ -52,20 +52,21 @@ void *car(void *car)
     //   -finally call exit_roundabout (...)
     car_struct *self = (car_struct *)car;
 
-    sem_wait(&sem);
+    sem_wait(&limit_sem);
     wait(self->entry_seg);
     enter_roundabout(self);
 
-    while (self->current_seg != self->exit_seg)
+    while (1)
     {
         wait(NEXT(self->current_seg, num_of_segments));
         move_to_next_segment(self);
         signal(PREV(self->current_seg, num_of_segments));
+        if (self->current_seg == self->exit_seg) break;
     }
 
     exit_roundabout(self);
     signal(self->exit_seg);
-    sem_post(&sem);
+    sem_post(&limit_sem);
 
     pthread_exit(NULL);
 }
