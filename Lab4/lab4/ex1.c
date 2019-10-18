@@ -36,31 +36,35 @@ void os_run(int initial_num_pages, page_table *pg_table){
     while (1) {
         siginfo_t info;
         sigwaitinfo(&signals, &info);
-        
-        // retrieve the index of the page that the user program wants, or -1 if the user program has terminated
-        int const requested_page = info.si_value.sival_int;
-        
-        if (requested_page == -1) break;
-        
-        // process the signal, and update the page table as necessary
-        while(page_in_frame[victim] != -1 && pg_table->entries[victim].referenced == 1) {
-            pg_table->entries[victim].referenced = 0;
+
+        if (info.si_signo == SIGUSR1) {
+            // retrieve the index of the page that the user program wants, or -1 if the user program has terminated
+            int const requested_page = info.si_value.sival_int;
+            
+            if (requested_page == -1) break;
+            
+            // process the signal, and update the page table as necessary
+            while(page_in_frame[victim] != -1 
+                && pg_table->entries[page_in_frame[victim]].referenced == 1) {
+                pg_table->entries[page_in_frame[victim]].referenced = 0;
+                victim = NEXT(victim);
+            }
+            // printf("victim: %d\n", victim);
+            if(page_in_frame[victim] != -1) {
+                pg_table->entries[page_in_frame[victim]].valid = 0;
+            }
+            disk_read(victim, requested_page);
+            pg_table->entries[requested_page].valid = 1;
+            pg_table->entries[requested_page].referenced = 0;
+            pg_table->entries[requested_page].frame_index = victim;
+            page_in_frame[victim] = requested_page;
             victim = NEXT(victim);
+            
+            // tell the MMU that we are done updating the page table
+            union sigval reply_value;
+            reply_value.sival_int = 0; // set to 0 if the page is successfully loaded, set to 1 if the page is not mapped to the user process (i.e. segfault)
+            sigqueue(info.si_pid, SIGCONT, reply_value);
         }
-        // printf("victim: %d\n", victim);
-        if(page_in_frame[victim] != -1) {
-            pg_table->entries[page_in_frame[victim]].valid = 0;
-        }
-        disk_read(victim, requested_page);
-        pg_table->entries[requested_page].valid = 1;
-        pg_table->entries[requested_page].referenced = 0;
-        pg_table->entries[requested_page].frame_index = victim;
-        page_in_frame[victim] = requested_page;
-        victim = NEXT(victim);
         
-        // tell the MMU that we are done updating the page table
-        union sigval reply_value;
-        reply_value.sival_int = 0; // set to 0 if the page is successfully loaded, set to 1 if the page is not mapped to the user process (i.e. segfault)
-        sigqueue(info.si_pid, SIGCONT, reply_value);
     }
 }
