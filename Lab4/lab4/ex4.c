@@ -1,5 +1,5 @@
 /*************************************
- * Lab 4 Exercise 3
+ * Lab 4 Exercise 4
  * Name: Tan Yuanhong
  * Student No: A0177903X
  * Lab Group: 07
@@ -36,7 +36,10 @@ void os_run(int initial_num_pages, page_table *pg_table){
     int victim = 0;
     int page_in_frame[FRAME_NUM];
     int mapped_page[PAGE_NUM];
+    int page_created[PAGE_NUM];
     memset(page_in_frame, -1, sizeof(page_in_frame));
+    memset(mapped_page, 0, sizeof(mapped_page));
+    memset(page_created, 0, sizeof(page_created));
 
     node_t *head = NULL;
     head = malloc(sizeof(node_t));
@@ -44,7 +47,6 @@ void os_run(int initial_num_pages, page_table *pg_table){
     
     // create the pages in the disk first, because every page must be backed by the disk for this lab
     for (int i=0; i!=initial_num_pages; ++i) {
-        disk_create(i);
         mapped_page[i] = 1;
     }
 
@@ -89,11 +91,19 @@ void os_run(int initial_num_pages, page_table *pg_table){
                 pg_table->entries[page_in_frame[victim]].valid = 0;
                 pg_table->entries[page_in_frame[victim]].referenced = 0;
                 if(pg_table->entries[page_in_frame[victim]].dirty == 1) {
+                    if (page_created[page_in_frame[victim]] == 0) {
+                        disk_create(page_in_frame[victim]);
+                        page_created[page_in_frame[victim]] = 1;
+                    }
                     disk_write(victim, page_in_frame[victim]);
                     mapped_page[page_in_frame[victim]] = 1;
                 }
             }
 
+            if (page_created[requested_page] == 0) {
+                disk_create(requested_page);
+                page_created[requested_page] = 1;
+            }
             disk_read(victim, requested_page);
             pg_table->entries[requested_page].valid = 1;
             pg_table->entries[requested_page].referenced = 0;
@@ -114,7 +124,6 @@ void os_run(int initial_num_pages, page_table *pg_table){
                 if(head == NULL) {
                     printf("error when creating a page on disk\n");
                 } else {
-                    disk_create(head->val);
                     mapped_page[head->val] = 1;
                     union sigval reply_value;
                     reply_value.sival_int = head->val;
@@ -130,6 +139,7 @@ void os_run(int initial_num_pages, page_table *pg_table){
                     pg_table->entries[unmap_page].referenced = 0;
                     pg_table->entries[unmap_page].dirty = 0;
                     disk_delete(unmap_page);
+                    page_created[unmap_page] = 0;
                     mapped_page[unmap_page] = 0;
                     node_t *new_node = malloc(sizeof(node_t));
                     new_node->val = unmap_page;
