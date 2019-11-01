@@ -134,10 +134,10 @@ void os_run(int initial_num_pages, page_table *pg_table){
                     // unmap_page is mapped to a frame
                     if (pg_table->entries[unmap_page].valid != 0) {
                         pg_table->entries[unmap_page].frame_index = -1;
+                        pg_table->entries[unmap_page].valid = 0;
+                        pg_table->entries[unmap_page].referenced = 0;
+                        pg_table->entries[unmap_page].dirty = 0;
                     }
-                    pg_table->entries[unmap_page].valid = 0;
-                    pg_table->entries[unmap_page].referenced = 0;
-                    pg_table->entries[unmap_page].dirty = 0;
                     disk_delete(unmap_page);
                     mapped_page[unmap_page] = 0;
                     node_t *new_node = malloc(sizeof(node_t));
