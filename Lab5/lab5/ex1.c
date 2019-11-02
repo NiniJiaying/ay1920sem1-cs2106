@@ -63,12 +63,44 @@ MY_FILE *my_fopen(const char *pathname, const char *mode) {
 
 	f->fd = fd;
 	// TODO: Initialize the other members of your structure
+	f->read_buffer = malloc(sizeof(char) * MY_BUFFER_SIZE);
+	f->write_buffer = malloc(sizeof(char) * MY_BUFFER_SIZE);
+	f->read_buf_start = -1;
+	f->read_buf_end = -1;
+	f->write_buf_pos = 0;
+	switch (mode[0]) {
+		case 'r':
+			f->can_read = 1;
+			f->can_write = 0;
+			f->is_append = 0;
+			break;
+		case 'w':
+			f->can_read = 0;
+			f->can_write = 1;
+			f->is_append = 0;
+			break;
+		case 'a':
+			f->can_read = 0;
+			f->can_write = 1;
+			f->is_append = 1;
+			break;
+		default:
+			return NULL;
+	}
+
+	if (mode[1] == '+') {
+		f->can_read = 1;
+		f->can_write = 1;
+	}
+
 
 	return f;
 }
 
 void free_file(MY_FILE *f) {
 	// TODO: free() members of your structure as needed
+	free(f->read_buffer);
+	free(f->write_buffer);
 	free(f);
 }
 

@@ -9,7 +9,49 @@
  *************************************/
 
 #include "my_stdio.h"
+#include <stdio.h>
+
+
+/*
+The function reads nmemb items of data, each size bytes long, from the
+stream pointed to by stream, storing them at the location given by ptr. The function
+returns the number of items read, or –1 if an error occurs.
+ */
+
+// what happens if `nmemb` is more than what the file contains?
 
 size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
-	return 0;
+	if (stream->can_read != 1) {
+		return -1;
+	}
+
+	int total_bytes = size * nmemb;
+	int read_bytes = 0;
+
+	while (1) {
+		if (stream->read_buf_start == -1 || stream->read_buf_start > stream->read_buf_end) {
+			int read_count = read(stream->fd, stream->read_buffer, MY_BUFFER_SIZE);
+			if (read_count != 0) {
+				stream->read_buf_start = 0;
+				stream->read_buf_end = read_count-1;
+			} else {
+				return -1; // or return read_bytes?
+			}
+		}
+		int buf_len = stream->read_buf_end - stream->read_buf_start + 1;
+		if (buf_len >= total_bytes) {
+			memcpy(ptr, stream->read_buffer + stream->read_buf_start, total_bytes);
+			stream->read_buf_start += total_bytes;
+			read_bytes += total_bytes;
+			break;
+		} else {
+			memcpy(ptr, stream->read_buffer + stream->read_buf_start, buf_len);
+			ptr += buf_len;
+			stream->read_buf_start += buf_len;
+			total_bytes -= buf_len;
+			read_bytes += buf_len;
+		}
+	}
+
+	return read_bytes / size;
 }

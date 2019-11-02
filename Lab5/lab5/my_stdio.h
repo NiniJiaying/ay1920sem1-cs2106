@@ -22,10 +22,19 @@
 #include <string.h>
 
 #define MY_EOF (-1)
+#define MY_BUFFER_SIZE 4096
 
 typedef struct {
 	int fd;
 	// TODO: Define the members of your structure
+	int can_read;
+	int can_write;
+	int is_append;
+	char *read_buffer;
+	int read_buf_start;
+	int read_buf_end;
+	char *write_buffer;
+	int write_buf_pos;
 } MY_FILE; 
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);
