@@ -1,0 +1,21 @@
+Calling runner with input1.in
+S: File runner.c is now open
+S: 101 bytes were read from file runner.c
+F: Could not open file rummer.c
+S: File test.txt is now open
+S: 0 bytes were written to file test.txt
+S: File offset of file test.txt is now at position 0
+S: 0 bytes were read from file test.txt
+S: File offset of file test.txt is now at position 0
+S: 0 bytes were written to file test.txt
+S: File test.txt was flushed
+S: File test.txt is now closed
+S: File test.txt is now open
+S: 0 bytes were written to file test.txt
+S: File test.txt was flushed
+S: File test.txt is now closed
+S: File runner.c is now closed
+S: File test.txt is now open
+S: 0 bytes were read from file test.txt
+F: File test.text is not open
+S: File test.txt is now closed

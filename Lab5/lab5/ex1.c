@@ -1,8 +1,8 @@
 /*************************************
  * Lab 5 Ex1
- * Name:
- * Student No:
- * Lab Group:
+ * Name: Tan Yuanhong
+ * Student No: A0177903X
+ * Lab Group: 07
  *************************************
  Warning: Make sure your code works on
  lab machine (Linux on x86)
@@ -67,7 +67,8 @@ MY_FILE *my_fopen(const char *pathname, const char *mode) {
 	f->write_buffer = malloc(sizeof(char) * MY_BUFFER_SIZE);
 	f->read_buf_start = -1;
 	f->read_buf_end = -1;
-	f->write_buf_pos = 0;
+	f->write_buf_end = -1;
+	f->offset = 0;
 	switch (mode[0]) {
 		case 'r':
 			f->can_read = 1;

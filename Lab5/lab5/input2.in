@@ -1,0 +1,2 @@
+my_fopen test.txt w+
+my_fwrite test.txt 5

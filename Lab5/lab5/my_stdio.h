@@ -1,8 +1,8 @@
 /*************************************
  * Lab 5 my_stdio.h
- * Name:
- * Student No:
- * Lab Group:
+ * Name: Tan Yuanhong
+ * Student No: A0177903X
+ * Lab Group: 07
  *************************************
  Warning: Make sure your code works on
  lab machine (Linux on x86)
@@ -24,6 +24,7 @@
 #define MY_EOF (-1)
 #define MY_BUFFER_SIZE 4096
 
+
 typedef struct {
 	int fd;
 	// TODO: Define the members of your structure
@@ -34,7 +35,8 @@ typedef struct {
 	int read_buf_start;
 	int read_buf_end;
 	char *write_buffer;
-	int write_buf_pos;
+	int write_buf_end; // the last index where write buffer is valid
+	int offset;
 } MY_FILE; 
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);
