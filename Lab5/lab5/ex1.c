@@ -68,7 +68,6 @@ MY_FILE *my_fopen(const char *pathname, const char *mode) {
 	f->read_buf_start = -1;
 	f->read_buf_end = -1;
 	f->write_buf_end = -1;
-	f->offset = 0;
 	switch (mode[0]) {
 		case 'r':
 			f->can_read = 1;

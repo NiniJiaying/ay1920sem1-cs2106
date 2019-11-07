@@ -12,43 +12,28 @@
 #include <stdio.h>
 
 int my_fflush(MY_FILE *stream) {
-	if (stream->can_read == 1) {
-		// clear the read buffer
+
+	if (!(stream->read_buf_start == -1 || stream->read_buf_start > stream->read_buf_end)) {
+		lseek(stream->fd, -(stream->read_buf_end - stream->read_buf_start + 1), SEEK_CUR);
 		stream->read_buf_start = -1;
 		stream->read_buf_end = -1;
-	} 
+		return 0;
+	}
 
 	if (stream->can_write == 1) {
 		if (stream->write_buf_end != -1) {
-			// printf("clearing the write buffer\n");
 			if (write(stream->fd, stream->write_buffer, stream->write_buf_end+1) == -1) {
 				return MY_EOF;
 			}
 			stream->write_buf_end = -1; // clear the write buffer
 		}
+		return 0;
 	}
-
-	stream->offset = 0;
-	// printf("offset: %d\n", stream->offset);
 
 	return 0;
 }
 
 int my_fseek(MY_FILE *stream, long offset, int whence) {
-	if (stream->can_read == 1) {
-		// clear the read buffer
-		stream->read_buf_start = -1;
-		stream->read_buf_end = -1;
-	}
-	if (stream->can_write == 1) {
-		if (stream->write_buf_end != -1) {
-			if (write(stream->fd, stream->write_buffer, stream->write_buf_end+1) == -1) {
-				return MY_EOF;
-			}
-			stream->write_buf_end = -1; // clear the write buffer
-			stream->offset = lseek(stream->fd, offset, whence);
-		}
-	}
-	lseek(stream->fd, stream->offset, SEEK_SET);
+	my_fflush(stream);
 	return lseek(stream->fd, offset, whence);
 }

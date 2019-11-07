@@ -28,6 +28,7 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 
 	while (1) {
 		if (stream->read_buf_start == -1 || stream->read_buf_start > stream->read_buf_end) {
+			// read buffer is empty or exhausted
 			int read_count = read(stream->fd, stream->read_buffer, MY_BUFFER_SIZE);
 			if (read_count == -1) {
 				return -1;
@@ -36,8 +37,6 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 				stream->read_buf_start = 0;
 				stream->read_buf_end = read_count-1;
 			} else {
-				stream->offset += read_bytes;
-				// printf("offset: %d\n", stream->offset);
 				return read_bytes / size;
 			}
 		}
@@ -49,8 +48,6 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 			break;
 		} else if (buf_len < size) {
 			// whether to copy incomplete size_t to buf or not?
-			stream->offset += read_bytes;
-			// printf("offset: %d\n", stream->offset);
             return read_bytes / size;
         } else {
 			memcpy(ptr, stream->read_buffer + stream->read_buf_start, buf_len);
@@ -61,7 +58,5 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 		}
 	}
 
-	stream->offset += read_bytes;
-	// printf("offset: %d\n", stream->offset);
 	return read_bytes / size;
 }

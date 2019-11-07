@@ -36,7 +36,6 @@ typedef struct {
 	int read_buf_end;
 	char *write_buffer;
 	int write_buf_end; // the last index where write buffer is valid
-	int offset;
 } MY_FILE; 
 
 MY_FILE *my_fopen(const char *pathname, const char *mode);

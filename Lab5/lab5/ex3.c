@@ -20,8 +20,6 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 	if (stream->is_append) {
 		struct stat *status = malloc(sizeof(*status));
 		fstat(stream->fd, status);
-		stream->offset = status->st_size;
-		stream->offset += stream->write_buf_end + 1;
 	}
 
 	int total_bytes = size * nmemb;
@@ -36,8 +34,6 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 				stream->write_buf_end += total_bytes;
 				write_bytes += total_bytes;
 				total_bytes = 0;
-				stream->offset += write_bytes;
-				// printf("offset: %d\n", stream->offset);
 				return write_bytes / size;
 			} else {
 				memcpy(stream->write_buffer, ptr, MY_BUFFER_SIZE);
@@ -60,8 +56,6 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 				stream->write_buf_end += total_bytes;
 				write_bytes += total_bytes;
 				total_bytes = 0;
-				stream->offset += write_bytes;
-				// printf("offset: %d\n", stream->offset);
 				return write_bytes / size;
 			}
 		}
@@ -76,7 +70,5 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 		}
 	}
 	
-	stream->offset += write_bytes;
-	// printf("offset: %d\n", stream->offset);
 	return write_bytes / size; // shouldn't reach here
 }
