@@ -18,8 +18,7 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 	}
 
 	if (stream->is_append) {
-		struct stat *status = malloc(sizeof(*status));
-		fstat(stream->fd, status);
+		lseek(stream->fd, 0, SEEK_END);
 	}
 
 	int total_bytes = size * nmemb;
