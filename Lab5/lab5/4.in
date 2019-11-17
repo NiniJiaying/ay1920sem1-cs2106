@@ -1,0 +1,9 @@
+my_fopen test2.txt r+
+my_fwrite test2.txt 10
+my_fflush test2.txt
+my_fread test2.txt 3
+my_fseek test2.txt -3 1
+my_fclose test2.txt
+my_fopen test2.txt a
+my_fwrite test2.txt 5
+my_fclose test2.txt

@@ -3,7 +3,7 @@ CFLAGS=-Wall -fPIC
 LDFLAGS = -L.
 LDLIBS = -lmy_stdio -ldl
 
-all: libmy_stdio.so runner demo
+all: libmy_stdio.so runner demo main
 
 libmy_stdio.so: ex1.o ex2.o ex3.o ex4.o
 	$(CC) -shared -o $@ $^
@@ -15,6 +15,9 @@ runner: runner.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 demo: demo.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+
+main: main.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 clean:

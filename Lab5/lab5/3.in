@@ -1,0 +1,16 @@
+my_fopen test.txt w+
+my_fwrite test.txt 5
+my_fwrite test.txt 6
+my_fflush test.txt
+my_fread test.txt 2
+my_fseek test.txt 0 0
+my_fread test.txt 3
+my_fread test.txt 10
+my_fseek test.txt 2 0
+my_fseek test.txt -2 1
+my_fread test.txt 100
+my_fclose test.txt
+my_fopen test.txt a+
+my_fwrite test.txt 5
+my_fclose test.text
+my_fclose test.txt

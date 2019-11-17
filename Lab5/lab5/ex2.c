@@ -9,8 +9,6 @@
  *************************************/
 
 #include "my_stdio.h"
-#include <stdio.h>
-
 
 /*
 The function reads nmemb items of data, each size bytes long, from the
@@ -27,13 +25,18 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 	int read_bytes = 0;
 
 	while (1) {
+		int file_exhausted = 0;
 		if (stream->read_buf_start == -1 || stream->read_buf_start > stream->read_buf_end) {
 			// read buffer is empty or exhausted
 			int read_count = read(stream->fd, stream->read_buffer, MY_BUFFER_SIZE);
+
 			if (read_count == -1) {
 				return -1;
 			}
 			if (read_count != 0) {
+				if (read_count < MY_BUFFER_SIZE) {
+					file_exhausted = 1;
+				}
 				stream->read_buf_start = 0;
 				stream->read_buf_end = read_count-1;
 			} else {
@@ -55,6 +58,9 @@ size_t my_fread(void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 			stream->read_buf_start += buf_len;
 			total_bytes -= buf_len;
 			read_bytes += buf_len;
+		}
+		if (file_exhausted == 1) {
+			return read_bytes / size;
 		}
 	}
 

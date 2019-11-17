@@ -10,7 +10,6 @@
 
 #include "my_stdio.h"
 #include <sys/stat.h>
-#include <stdio.h>
 
 size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 	if (stream->can_write != 1) {
@@ -27,7 +26,7 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 	while (1) {
 		if (stream->write_buf_end == -1) {
 			// write buffer is empty
-			if (total_bytes <= MY_BUFFER_SIZE) {
+			if (total_bytes < MY_BUFFER_SIZE) {
 				memcpy(stream->write_buffer, ptr, total_bytes);
 				ptr += total_bytes;
 				stream->write_buf_end += total_bytes;
