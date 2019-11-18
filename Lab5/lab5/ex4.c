@@ -22,6 +22,9 @@ int my_fflush(MY_FILE *stream) {
 
 	if (stream->can_write == 1) {
 		if (stream->write_buf_end != -1) {
+			if (stream->is_append) {
+				lseek(stream->fd, 0, SEEK_END);
+			}
 			if (write(stream->fd, stream->write_buffer, stream->write_buf_end+1) == -1) {
 				return MY_EOF;
 			}

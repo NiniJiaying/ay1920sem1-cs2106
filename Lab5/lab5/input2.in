@@ -1,2 +1,6 @@
 my_fopen test.txt w+
 my_fwrite test.txt 5
+my_fseek test.txt 0 1
+my_fread test.txt 3
+my_fclose test.text
+my_fclose test.txt

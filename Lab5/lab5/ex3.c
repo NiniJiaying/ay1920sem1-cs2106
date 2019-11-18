@@ -16,10 +16,6 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 		return -1;
 	}
 
-	if (stream->is_append) {
-		lseek(stream->fd, 0, SEEK_END);
-	}
-
 	int total_bytes = size * nmemb;
 	int write_bytes = 0;
 
@@ -61,6 +57,9 @@ size_t my_fwrite(const void *ptr, size_t size, size_t nmemb, MY_FILE *stream) {
 
 		if (stream->write_buf_end == MY_BUFFER_SIZE-1) {
 			// write buffer is full, call write()
+			if (stream->is_append) {
+				lseek(stream->fd, 0, SEEK_END);
+			}
 			if (write(stream->fd, stream->write_buffer, MY_BUFFER_SIZE) == -1) {
 				return -1;
 			}

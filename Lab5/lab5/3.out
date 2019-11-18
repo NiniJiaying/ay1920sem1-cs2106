@@ -1,0 +1,16 @@
+S: File test.txt is now open
+S: 5 bytes were written to file test.txt
+S: 6 bytes were written to file test.txt
+S: File test.txt was flushed
+S: 0 bytes were read from file test.txt
+S: File offset of file test.txt is now at position 0
+S: 3 bytes were read from file test.txt
+S: 8 bytes were read from file test.txt
+S: File offset of file test.txt is now at position 2
+S: File offset of file test.txt is now at position 0
+S: 11 bytes were read from file test.txt
+S: File test.txt is now closed
+S: File test.txt is now open
+S: 5 bytes were written to file test.txt
+F: File test.text is not open
+S: File test.txt is now closed
